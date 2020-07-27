@@ -110,9 +110,16 @@ std::string defaultLocalAddress{ "127.0.0.1" };
 // The remote app is connected to Pixhawk, and is also "serving" UDP packets, this tells us what remote
 // connection to create to talke to that server.
 // Note !: must be changed to TCP since PX4 only supports TCP now (Port: 4560)
-bool offboard = false;
-PortAddress offboardEndPoint;
-#define DEFAULT_OFFBOARD_PORT 14560
+bool offboard_UDP= false;
+PortAddress offboardEndPoint_UDP;
+#define DEFAULT_OFFBOARD_PORT_UDP 14560
+
+// The remote app is connected to Pixhawk, and is also "serving" TCP packets, this tells us what remote
+// connection to create to talke to that server.
+// 
+bool offboard_TCP = false;
+PortAddress offboardEndPoint_TCP;
+#define DEFAULT_OFFBOARD_PORT_TCP 4560
 
 //might be removed
 // this is used if you want to connect MavLinkTest to the serial port of the Pixhawk directly
@@ -766,7 +773,7 @@ void PrintUsage() {
     printf("    -logformat:json                        - the default is binary .mavlink, if you specify this option you will get mavlink logs in json\n");
     printf("    -convert:[json,csv]                    - convert all existing .mavlink log files in the logdir to the specified -logformat\n");
 #endif 
-    printf("    -filter:msid,msgid,...                 - while converting .mavlink log extract only the given mavlink message ids\n");
+    printf("    -filter:msgid,msgid,...                 - while converting .mavlink log extract only the given mavlink message ids\n");
     printf("    -noradio							   - disables RC link loss failsafe\n");
     printf("    -nsh                                   - enter NuttX shell immediately on connecting with PX4\n");
     printf("    -telemetry                             - generate telemetry mavlink messages for logviewer\n");
@@ -799,14 +806,27 @@ bool ParseCommandLine(int argc, const char* argv[])
             std::string lower = Utils::toLower(parts[0]); //arguments are not case sensitive
             if (lower == "udp") //udp
             {
-                offboard = true; //on offboard mode Note: probably it looks for these set of flags for next operation
-                offboardEndPoint.port = DEFAULT_OFFBOARD_PORT; //setup  port to default
+                offboard_UDP = true; //on offboard mode Note: probably it looks for these set of flags for next operation
+                offboardEndPoint_UDP.port = DEFAULT_OFFBOARD_PORT_UDP; //setup  port to default
                 if (parts.size() > 1) 
                 {
-                    offboardEndPoint.addr = parts[1]; //setup id
+                    offboardEndPoint_UDP.addr = parts[1]; //setup id
                     if (parts.size() > 2)
                     {
-                        offboardEndPoint.port = atoi(parts[2].c_str());//setup  port to default
+                        offboardEndPoint_UDP.port = atoi(parts[2].c_str());//setup  port to default
+                    }
+                }
+            }
+            if (lower == "udp") //udp
+            {
+                offboard_UDP = true; //on offboard mode Note: probably it looks for these set of flags for next operation
+                offboardEndPoint_UDP.port = DEFAULT_OFFBOARD_PORT_UDP; //setup  port to default
+                if (parts.size() > 1) 
+                {
+                    offboardEndPoint_UDP.addr = parts[1]; //setup id
+                    if (parts.size() > 2)
+                    {
+                        offboardEndPoint_UDP.port = atoi(parts[2].c_str());//setup  port to default
                     }
                 }
             }
@@ -1062,13 +1082,13 @@ std::shared_ptr<MavLinkConnection> connectSerial()
 }
 
 
-std::shared_ptr<MavLinkConnection> connectOffboard()
+std::shared_ptr<MavLinkConnection> connectOffboard_UDP()
 {
-    if (offboardEndPoint.addr == "") {
-        offboardEndPoint.addr = defaultLocalAddress;
+    if (offboardEndPoint_UDP.addr == "") {
+        offboardEndPoint_UDP.addr = defaultLocalAddress;
     }
-    printf("Connecting to offboard drone at address %s:%d\n", offboardEndPoint.addr.c_str(), offboardEndPoint.port);
-    return MavLinkConnection::connectRemoteUdp("drone", defaultLocalAddress, offboardEndPoint.addr, offboardEndPoint.port);
+    printf("Connecting to offboard drone at address %s:%d\n", offboardEndPoint_UDP.addr.c_str(), offboardEndPoint_UDP.port);
+    return MavLinkConnection::connectRemoteUdp("drone", defaultLocalAddress, offboardEndPoint_UDP.addr, offboardEndPoint_UDP.port);
 }
 
 
@@ -1111,16 +1131,16 @@ void stopTelemetry() {
 
 bool connect()
 {
-    if (offboard && serial)
+    if (offboard_UDP && serial)
     {
         printf("Cannot connect to local -serial pixhawk and -udp drone at the same time \n");
         return false;
     }
-    if (!offboard && !serial && !server) {
+    if (!offboard_UDP && !serial && !server) {
         printf("Must specify one of -serial, -udp or -server otherwise we don't have a drone connection\n");
         return false;
     }
-    if (offboard && server)
+    if (offboard_UDP && server)
     {
         printf("Cannot have offboard and server, must pick one of this as the primary drone connection\n");
         return false;
@@ -1131,10 +1151,10 @@ bool connect()
     if (serial) {
         droneConnection = connectSerial();
     }
-    else if (offboard)
+    else if (offboard_UDP)
     {
-        droneConnection = connectOffboard();
-        usedPorts.push_back(offboardEndPoint);
+        droneConnection = connectOffboard_UDP();
+        usedPorts.push_back(offboardEndPoint_UDP);
     }
 
     if (server)
