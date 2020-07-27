@@ -1,0 +1,4 @@
+d:\SoarRobotics\Simulation_Core\Airsim_Fork\AirSim\MavLinkCom\lib\x64\Debug\MavLinkCom.pdb
+d:\SoarRobotics\Simulation_Core\Airsim_Fork\AirSim\MavLinkCom\temp\MavLinkCom\x64\Debug\MavLinkCom.pdb
+D:\SoarRobotics\Simulation_Core\Mavlink-DDS-Wrapper\Simulair-Suite\MavLinkCom\lib\x64\Debug\MavLinkCom.pdb
+D:\SoarRobotics\Simulation_Core\Mavlink-DDS-Wrapper\Simulair-Suite\MavLinkCom\temp\MavLinkCom\x64\Debug\MavLinkCom.pdb
